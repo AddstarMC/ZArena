@@ -8,33 +8,35 @@ import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import com.github.achievementsx.AchievementsAPI;
 import com.github.customentitylibrary.entities.CustomEntityWrapper;
-
 import com.github.customentitylibrary.entities.CustomPigZombie;
 import com.github.zarena.events.*;
 import com.github.zarena.utils.*;
+
 import de.congrace.exp4j.Calculable;
 import de.congrace.exp4j.ExpressionBuilder;
 import de.congrace.exp4j.UnknownFunctionException;
 import de.congrace.exp4j.UnparsableExpressionException;
-import net.minecraft.server.v1_7_R1.EntitySkeleton;
-import net.minecraft.server.v1_7_R1.EntityWolf;
-import net.minecraft.server.v1_7_R1.EntityZombie;
+import net.minecraft.server.v1_7_R4.EntitySkeleton;
+import net.minecraft.server.v1_7_R4.EntityWolf;
+import net.minecraft.server.v1_7_R4.EntityZombie;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import com.github.zarena.entities.ZEntityType;
+
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.projectiles.ProjectileSource;
 
 public class WaveHandler implements Runnable, Listener
 {
@@ -289,7 +291,7 @@ public class WaveHandler implements Runnable, Listener
 			gameHandler.stop();
 			return null;
 		}
-		net.minecraft.server.v1_7_R1.World nmsWorld = ((CraftWorld)spawn.getWorld()).getHandle();
+		net.minecraft.server.v1_7_R4.World nmsWorld = ((CraftWorld)spawn.getWorld()).getHandle();
 		CustomEntityWrapper customEnt;
 		if(type.getPreferredType().equalsIgnoreCase("zombiepigman"))
 		{
@@ -441,7 +443,11 @@ public class WaveHandler implements Runnable, Listener
 			entity = CustomEntityWrapper.getCustomEntity(event.getDamager());
 		else if(event.getDamager() instanceof Projectile)
 		{
-			LivingEntity shooter = ((Projectile) event.getDamager()).getShooter();
+			ProjectileSource ps = ((Projectile) event.getDamager()).getShooter();
+			if (!(ps instanceof LivingEntity))
+				return;
+			
+			LivingEntity shooter = (LivingEntity) ps;
 			if(shooter != null && CustomEntityWrapper.instanceOf(shooter))
 				entity = CustomEntityWrapper.getCustomEntity(shooter);
 			else
@@ -558,26 +564,6 @@ public class WaveHandler implements Runnable, Listener
 					if(gameHandler.getGameMode().isApocalypse())
 					{
 						health = calcHealth(getApocalypseWave());
-						//Update achievements data, if enabled
-						if(plugin.isAchievementsEnabled())
-						{
-							for(PlayerStats stats : gameHandler.getPlayerStats().values())
-							{
-								if(!stats.isAlive())
-									continue;
-								String playerName = stats.getPlayer().getName();
-								String pluginName = "ZArena";
-								if(gameHandler.getGameMode().isApocalypse())
-								{
-									if(!stats.hasDied())
-									{
-										AchievementsAPI.setDataIfMax(playerName, pluginName, "highestTimeInMap:" + gameHandler.getLevel().getName(), getGameLength());
-										AchievementsAPI.setDataIfMax(playerName, pluginName, "highestTimeInGamemode:"+gameHandler.getGameMode().getName(), getGameLength());
-										AchievementsAPI.setDataIfMax(playerName, pluginName, "highestTime", getGameLength());
-									}
-								}
-							}
-						}
 					}
 					if(gameHandler.getGameMode().isSlowRegen())
 					{
@@ -695,32 +681,6 @@ public class WaveHandler implements Runnable, Listener
 		//Call event
 		WaveStartEvent event = new WaveStartEvent(wave);
 		Bukkit.getPluginManager().callEvent(event);
-
-		//Update achievements data, if enabled
-		if(plugin.isAchievementsEnabled())
-		{
-			for(PlayerStats stats : gameHandler.getPlayerStats().values())
-			{
-				if(!stats.isAlive())
-					continue;
-				String playerName = stats.getPlayer().getName();
-				String pluginName = "ZArena";
-				if(!gameHandler.getGameMode().isApocalypse())
-				{
-					AchievementsAPI.incrementData(playerName, pluginName, "wavesInMap:"+gameHandler.getLevel().getName(), 1);
-					AchievementsAPI.incrementData(playerName, pluginName, "wavesInGamemode:"+gameHandler.getGameMode().getName(), 1);
-					AchievementsAPI.incrementData(playerName, pluginName, "waves", 1);
-					//Only do these stats if the player hasn't died because it's unfair if the player respawns on wave 20 or something, lives for 20 seconds,
-					//but still gets his/her highest wave set to 20
-					if(!stats.hasDied())
-					{
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "highestWaveInMap:"+gameHandler.getLevel().getName(), getWave());
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "highestWaveInGamemode:"+gameHandler.getGameMode().getName(), getWave());
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "highestWave", getWave());
-					}
-				}
-			}
-		}
 	}
 
 	public void stop()

@@ -24,7 +24,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,8 +42,6 @@ import com.github.zarena.listeners.EntityListener;
 import com.github.zarena.listeners.PlayerListener;
 import com.github.zarena.listeners.WorldListener;
 import com.github.zarena.signs.ZSignCustomItem;
-import com.github.zarena.spout.PlayerOptionsHandler;
-import com.github.zarena.spout.SpoutHandler;
 
 public class ZArena extends JavaPlugin
 {
@@ -54,7 +51,6 @@ public class ZArena extends JavaPlugin
 	private KillCounter kc;
 
 	private GameHandler gameHandler; //Game handler
-	private PlayerOptionsHandler playerOptionsHandler;
 
 	private boolean achievementsEnabled = false;
 
@@ -71,15 +67,6 @@ public class ZArena extends JavaPlugin
 		PluginManager pm = Bukkit.getServer().getPluginManager();
 		//Enable stuff
 		CustomEntityLibrary.enable(this);
-		Plugin spoutP = pm.getPlugin("Spout");
-		if(spoutP != null)
-		{
-			spoutEnabled = true;
-			SpoutHandler.enable();
-		}
-		Plugin achievementsP = pm.getPlugin("AchievementsX");
-		if(achievementsP != null)
-			achievementsEnabled = true;
 		if(getConfig().getBoolean(ConfigEnum.ENABLE_KILLCOUNTER.toString()))
 		{
 			kc = new KillCounter();
@@ -138,15 +125,6 @@ public class ZArena extends JavaPlugin
 		new PlayerListener().registerEvents(pm, this);
 		new WorldListener().registerEvents(pm, this);
 		new BlockListener().registerEvents(pm, this);
-
-		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				onTick();
-			}
-		}, 1L, 1L);
 	}
 
 	public void onDisable()
@@ -188,11 +166,6 @@ public class ZArena extends JavaPlugin
 	public GameHandler getGameHandler()
 	{
 		return gameHandler;
-	}
-
-	public PlayerOptionsHandler getPlayerOptionsHandler()
-	{
-		return playerOptionsHandler;
 	}
 
 	public static ZArena getInstance()
@@ -369,30 +342,6 @@ public class ZArena extends JavaPlugin
 	private void loadFiles()
 	{
 		gameHandler.loadLevelHandler();
-		if(spoutEnabled)
-			loadPlayerOptions();
-	}
-
-	private void loadPlayerOptions()
-	{
-		File path = new File(Constants.OPTIONS_PATH);
-
-        try
-        {
-        	FileInputStream fis = new FileInputStream(path);
-            CustomObjectInputStream ois = new CustomObjectInputStream(fis);
-
-            playerOptionsHandler = new PlayerOptionsHandler();
-            playerOptionsHandler.readExternal(ois);
-
-            ois.close();
-            fis.close();
-
-        } catch (Exception e)
-        {
-        	log(Level.WARNING, "ZArena: Couldn't load the PlayerOptions database. Ignore if this is the first time the plugin has been run.");
-        	playerOptionsHandler = new PlayerOptionsHandler();
-        }
 	}
 
 	private void loadPluginFirstTime()
@@ -463,17 +412,6 @@ public class ZArena extends JavaPlugin
 
 			new ZSignCustomItem(name, type, amount, damageValue, id, enchantments); //Creation of new instances of this object automatically add the instance to a list of them
 		}
-	}
-
-	private int tick;
-	private void onTick()
-	{
-		if(tick % 20 == 0)
-		{
-			if(spoutEnabled)
-				SpoutHandler.updatePlayerOptions();
-		}
-		tick++;
 	}
 
 	private void registerSerializables()
@@ -577,8 +515,6 @@ public class ZArena extends JavaPlugin
         {
         	FileOutputStream fos = new FileOutputStream(path);
             ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            playerOptionsHandler.writeExternal(oos);
 
             oos.close();
             fos.close();

@@ -8,17 +8,17 @@ import java.util.*;
 import java.util.logging.Level;
 
 
-import net.minecraft.server.v1_7_R1.BlockDoor;
-import net.minecraft.server.v1_7_R1.BlockTrapdoor;
-import net.minecraft.server.v1_7_R1.EntityPlayer;
+import net.minecraft.server.v1_7_R4.BlockDoor;
+import net.minecraft.server.v1_7_R4.BlockTrapdoor;
+import net.minecraft.server.v1_7_R4.EntityPlayer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import com.github.zarena.ZArena;
@@ -149,8 +149,8 @@ public class ZTollSign extends ZSign implements Externalizable
 	public boolean executeClick(Player player)
 	{
 		Block costBlock = getCostBlock();
-		net.minecraft.server.v1_7_R1.World nmsWorld = ((CraftWorld) costBlock.getWorld()).getHandle();
-		net.minecraft.server.v1_7_R1.Block nmsBlock = nmsWorld.getType(costBlock.getX(), costBlock.getY(), costBlock.getZ());
+		net.minecraft.server.v1_7_R4.World nmsWorld = ((CraftWorld) costBlock.getWorld()).getHandle();
+		net.minecraft.server.v1_7_R4.Block nmsBlock = nmsWorld.getType(costBlock.getX(), costBlock.getY(), costBlock.getZ());
 		EntityPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
 		switch(costBlock.getType())
 		{
@@ -258,8 +258,8 @@ public class ZTollSign extends ZSign implements Externalizable
 		Block costBlock = getCostBlock();
 		if(costBlock == null)
 			return;
-		net.minecraft.server.v1_7_R1.World nmsWorld = ((CraftWorld) costBlock.getWorld()).getHandle();
-		net.minecraft.server.v1_7_R1.Block nmsBlock = nmsWorld.getType(costBlock.getX(), costBlock.getY(), costBlock.getZ());
+		net.minecraft.server.v1_7_R4.World nmsWorld = ((CraftWorld) costBlock.getWorld()).getHandle();
+		net.minecraft.server.v1_7_R4.Block nmsBlock = nmsWorld.getType(costBlock.getX(), costBlock.getY(), costBlock.getZ());
 		switch(costBlock.getType())
 		{
 		case WOODEN_DOOR: case IRON_DOOR: case IRON_DOOR_BLOCK:

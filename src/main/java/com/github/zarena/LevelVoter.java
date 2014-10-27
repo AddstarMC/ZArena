@@ -18,7 +18,6 @@ import com.github.zarena.events.GameStartCause;
 import com.github.zarena.events.GameStartEvent;
 import com.github.zarena.events.LevelChangeCause;
 import com.github.zarena.events.LevelChangeEvent;
-import com.github.zarena.spout.SpoutHandler;
 import com.github.zarena.utils.ChatHelper;
 import com.github.zarena.utils.Message;
 
@@ -134,8 +133,6 @@ public class LevelVoter implements Runnable
 			optionsArray[index] = option.getKey().getName()+"<"+option.getValue().getName()+">";
 			index++;
 		}
-		if(plugin.isSpoutEnabled())
-			SpoutHandler.openVotingScreens(optionsArray);
 		taskID = plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, this,
 				plugin.getConfig().getInt(ConfigEnum.VOTING_LENGTH.toString()) * 20);
 	}

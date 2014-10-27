@@ -1,6 +1,7 @@
 package com.github.zarena.utils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -44,7 +45,7 @@ public class ChatHelper
 
 	public static String[] broadcastMessage(String[] message)
 	{
-		return broadcastMessage(message, Bukkit.getServer().getOnlinePlayers());
+		return broadcastMessage(message, new ArrayList<Player>(Bukkit.getServer().getOnlinePlayers()));
 	}
 
 	public static String[] broadcastMessage(String[] message, Player[] players)

@@ -5,14 +5,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import com.github.achievementsx.AchievementsAPI;
 import com.github.customentitylibrary.entities.CustomEntityWrapper;
-
-import com.github.zarena.killcounter.KillCounter;
 import com.github.zarena.utils.*;
+
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -28,6 +27,7 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.projectiles.ProjectileSource;
 
 import com.github.zarena.GameHandler;
 import com.github.zarena.PlayerStats;
@@ -126,23 +126,6 @@ public class EntityListener implements Listener
 						if(Math.random() <= itemChance)
 							giveRandomItem(stats.getPlayer(), weight);
 					}
-
-					//Update achievements data, if enabled
-					if(plugin.isAchievementsEnabled())
-					{
-						String playerName = bestAttacker.getName();
-						String pluginName = "ZArena";
-						AchievementsAPI.setData(playerName, pluginName, "kills", KillCounter.instance.getKills(bestAttacker.getName()));
-						AchievementsAPI.incrementData(playerName, pluginName, "kills:" + type.getName(), 1);
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "killsInOneGame", stats.getKills());
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "killsInOneGame:" + type.getName(), stats.getKills(type.getName()));
-
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "highestMoneyInMap:" + gameHandler.getLevel().getName(), stats.getMoney());
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "highestMoneyInGamemode:" + gameHandler.getGameMode().getName(), stats.getMoney());
-						AchievementsAPI.setDataIfMax(playerName, pluginName, "highestMoney", stats.getMoney());
-
-						AchievementsAPI.setData(playerName, pluginName, "rank", KillCounter.instance.indexOf(playerName));
-					}
 				}
 			}
 
@@ -179,8 +162,11 @@ public class EntityListener implements Listener
 			event.setDamage((int) (event.getDamage() * gameHandler.getGameMode().getDamageModifier()));
         else if (damager instanceof Projectile)
 		{
-			Projectile pj = (Projectile) event.getDamager();
-			damager = pj.getShooter();
+			ProjectileSource ps = ((Projectile) event.getDamager()).getShooter();
+			if (!(ps instanceof LivingEntity))
+				return;
+
+			damager = (LivingEntity) ps;
 			if(damager != null && CustomEntityWrapper.instanceOf(damager) && CustomEntityWrapper.instanceOf(ent))	//If a custom mob shot another custom mob
 			{
 				event.setCancelled(true);

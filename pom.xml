@@ -14,35 +14,41 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <bukkit_version>1.7.2-R0.1-SNAPSHOT</bukkit_version>
         <github.global.server>github</github.global.server>
     </properties>
 
-    <distributionManagement>
-        <repository>
-            <id>internal.repo</id>
-            <name>Temporary Staging Repository</name>
-            <url>file://${project.build.directory}/mvn-repo</url>
-        </repository>
-    </distributionManagement>
-
     <repositories>
+        <!-- Addstar repos -->
         <repository>
-            <id>bukkit-repo</id>
-            <url>http://repo.bukkit.org/content/groups/public</url>
+          <id>addstar-repo</id>
+          <url>http://maven.addstar.com.au/artifactory/ext-release-local</url>
+          <snapshots>
+          	<enabled>false</enabled>
+          </snapshots>
         </repository>
+
+        <repository>
+          <id>addstar-snapshot-repo</id>
+          <url>http://maven.addstar.com.au/artifactory/ext-snapshot-local</url>
+          <snapshots>
+          	<enabled>true</enabled>
+          </snapshots>
+          <releases>
+            <enabled>false</enabled>
+          </releases>
+        </repository>
+
         <repository>
             <id>customentitylibrary-repo</id>
             <url>https://raw.github.com/smaltby/CustomEntityLibrary/mvn-repo/</url>
         </repository>
+
+        <!-- For Vault -->
         <repository>
-            <id>spout-repo</id>
-            <url>http://repo.spout.org/</url>
+          <id>theyeticave</id>
+          <url>http://nexus.theyeticave.net/content/repositories/pub_releases/</url>
         </repository>
-        <repository>
-            <id>vault-repo</id>
-            <url>http://ci.milkbowl.net/plugin/repository/everything/</url>
-        </repository>
+
         <repository>
             <id>exp4j-repo</id>
             <url>http://mvnrepository.com/artifact/de.congrace/exp4j</url>
@@ -51,46 +57,30 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>${bukkit_version}</version>
-            <scope>provided</scope>
+          <groupId>org.bukkit</groupId>
+          <artifactId>bukkit</artifactId>
+          <version>1.7.10-R0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>craftbukkit</artifactId>
-            <version>${bukkit_version}</version>
-            <scope>provided</scope>
+          <groupId>org.bukkit</groupId>
+          <artifactId>craftbukkit</artifactId>
+          <version>1.7.10-R0.1-SNAPSHOT</version>
         </dependency>
+        <!-- Used for Economy interop -->
         <dependency>
-            <groupId>org.getspout</groupId>
-            <artifactId>spoutplugin</artifactId>
-            <version>1.5.1-R0.2-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.milkbowl.vault</groupId>
-            <artifactId>Vault</artifactId>
-            <version>1.2.25-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.achievementsx</groupId>
-            <artifactId>AchievementsX</artifactId>
-            <version>0.1</version>
-            <scope>provided</scope>
+          <groupId>net.milkbowl.vault</groupId>
+          <artifactId>Vault</artifactId>
+          <version>1.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.customentitylibrary</groupId>
             <artifactId>CustomEntityLibrary</artifactId>
-            <version>1.4</version>
-            <scope>compile</scope>
+            <version>1.4.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.congrace</groupId>
             <artifactId>exp4j</artifactId>
             <version>0.3.10</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -135,39 +125,12 @@
                         <configuration>
                             <finalName>${project.name}</finalName>
                             <artifactSet>
-                                <excludes>
-                                    <exclude>org.bukkit:bukkit</exclude>
-                                    <exclude>org.bukkit:craftbukkit</exclude>
-                                    <exclude>org.getspout:spoutplugin</exclude>
-                                    <exclude>net.milkbowl.vault:Vault</exclude>
-                                </excludes>
+			        <includes>
+				    <include>de.congrace:exp4j</include>
+				    <include>com.github.customentitylibrary:CustomEntityLibrary</include>
+				</includes>
                             </artifactSet>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>com.github.github</groupId>
-                <artifactId>site-maven-plugin</artifactId>
-                <version>0.9</version>
-                <configuration>
-                    <message>Maven artifacts for ${project.version}</message>
-                    <noJekyll>true</noJekyll>
-                    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
-                    <branch>refs/heads/master</branch>
-                    <includes><include>**/*</include></includes>
-                    <repositoryName>Maven-Repos</repositoryName>
-                    <repositoryOwner>smaltby</repositoryOwner>
-                    <merge>true</merge>
-                    <force>true</force>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <phase>deploy</phase>
                     </execution>
                 </executions>
             </plugin>

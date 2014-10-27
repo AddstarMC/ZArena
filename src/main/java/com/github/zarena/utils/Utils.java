@@ -3,13 +3,13 @@ package com.github.zarena.utils;
 import java.io.*;
 
 
-import net.minecraft.server.v1_7_R1.*;
+import net.minecraft.server.v1_7_R4.*;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_7_R1.inventory.CraftInventoryPlayer;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_7_R4.inventory.CraftInventoryPlayer;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -451,7 +451,7 @@ public class Utils
 	public static CraftInventoryPlayer loadOfflinePlayerInventory(String playerName) throws IOException
 	{
 		NBTTagList list = (NBTTagList) getOfflinePlayerTagValue(playerName, "Inventory");
-		net.minecraft.server.v1_7_R1.PlayerInventory pi = new net.minecraft.server.v1_7_R1.PlayerInventory(null);
+		net.minecraft.server.v1_7_R4.PlayerInventory pi = new net.minecraft.server.v1_7_R4.PlayerInventory(null);
 		pi.b(list);
 		return new CraftInventoryPlayer(pi);
 	}

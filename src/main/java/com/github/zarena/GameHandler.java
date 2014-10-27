@@ -13,17 +13,19 @@ import java.util.Map;
 import java.util.logging.Level;
 
 
-import com.github.customentitylibrary.entities.CustomEntityWrapper;
 
+import com.github.customentitylibrary.entities.CustomEntityWrapper;
 import com.github.zarena.events.PlayerRespawnCause;
 import com.github.zarena.events.PlayerRespawnInGameEvent;
 import com.github.zarena.utils.*;
-import net.minecraft.server.v1_7_R1.NBTTagDouble;
-import net.minecraft.server.v1_7_R1.NBTTagList;
+
+import net.minecraft.server.v1_7_R4.NBTTagDouble;
+import net.minecraft.server.v1_7_R4.NBTTagList;
+
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_7_R1.inventory.CraftInventoryPlayer;
+import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R4.inventory.CraftInventoryPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -241,7 +243,8 @@ public class GameHandler
 	{
 		List<Player> toBroadcast = new ArrayList<Player>();
 		if(plugin.getConfig().getBoolean(ConfigEnum.BROADCAST_ALL.toString(), false))
-			toBroadcast = Arrays.asList(Bukkit.getOnlinePlayers());
+			toBroadcast = new ArrayList<Player>(Bukkit.getServer().getOnlinePlayers());
+
 		else if(plugin.getConfig().getBoolean(ConfigEnum.WORLD_EXCLUSIVE.toString(), false))
 		{
 			for(Player p : Bukkit.getServer().getOnlinePlayers())
