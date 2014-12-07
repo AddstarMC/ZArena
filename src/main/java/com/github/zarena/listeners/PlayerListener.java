@@ -150,7 +150,7 @@ public class PlayerListener implements Listener
 						}
 				}
 		}
-		else if(new CommandSenderWrapper(player).canCreateLevels() && player.getGameMode() == GameMode.CREATIVE
+		else if(new CommandSenderWrapper(player).canCreateLevels() && player.getGameMode() == GameMode.CREATIVE && player.isSneaking()
 				&& (!gameHandler.getPlayers().contains(player) || !gameHandler.isRunning()))
 		{
 			if(!(block.getState() instanceof Sign))
