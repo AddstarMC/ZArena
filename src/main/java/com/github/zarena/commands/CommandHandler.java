@@ -844,4 +844,32 @@ public class CommandHandler
 		}
 		gameHandler.getLevelVoter().castVote(voteNum, player);
 	}
+
+	public void setMoney(String playerName, double money)
+	{
+		if(!senderWrapper.canControlGames())
+		{
+			senderWrapper.sendMessage(Message.INSUFFICIENT_PERMISSIONS.formatMessage());
+			return;
+		}
+		if(!gameHandler.isRunning())
+		{
+			senderWrapper.sendMessage(Message.GAME_MUST_BE_RUNNING.formatMessage());
+			return;
+		}
+		Player player = plugin.getServer().getPlayer(playerName);
+		if(player == null)
+		{
+			senderWrapper.sendMessage(Message.PLAYER_NOT_FOUND.formatMessage());
+			return;
+		}
+		PlayerStats stats = gameHandler.getPlayerStats().get(player.getName());
+		if(stats == null)
+		{
+			senderWrapper.sendMessage(Message.PLAYER_NOT_IN_GAME.formatMessage());
+			return;
+		}
+		stats.setMoney(money);
+		senderWrapper.sendMessage(Message.SET_PLAYERS_MONEY.formatMessage(playerName, money));
+	}
 }

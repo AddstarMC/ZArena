@@ -93,6 +93,10 @@ public class ZACommands implements CommandExecutor
 				helpMessage = "/zarena setwave <wave>";
 				handler.setWave(command.get(2));
 				break;
+			case SETMONEY:
+				helpMessage = "/zarena setmoney <player> <amount>";
+				handler.setMoney(command.get(2), Double.parseDouble(command.get(3)));
+				break;
 			case INFO:
 				handler.sendInfo("general");
 				break;

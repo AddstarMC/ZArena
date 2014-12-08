@@ -327,6 +327,9 @@ Arg 4 Must Be True Or False: "<red>Argument 4 must be either true or false."
 #Sent when the player sucessfully sets a player's alive status.
 Set Players Alive Status: "<red>Successfully set player's alive status."
 
+#Sent when the player sucessfully sets a player's money.
+Set Players Money: "<red>Player money for <gold>%PLAYER%<red> set to <gold>%MONEY%<red>."
+
 #Sent when the player sucessfully sets the DSpawn.
 DSpawn Set: "<red>DSpawn set successfully."
 
