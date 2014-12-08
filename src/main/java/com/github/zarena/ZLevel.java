@@ -37,6 +37,7 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 	private Map<String, ZTollSign> disabledZTollSigns;
 	private String name;
 	private String world;
+	private Gamemode gamemode;
 
 	private Random rnd = new Random();
 	private List<String> inactiveZSpawns = new ArrayList<String>();
@@ -106,6 +107,11 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 	public String getName()
 	{
 		return name;
+	}
+	
+	public Gamemode getGamemode()
+	{
+		return gamemode;
 	}
 	
 	public String getNearestZombieSpawn(Location location)
@@ -276,12 +282,26 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		this.name = name;
 	}
 
+	public void setGamemode(String gm)
+	{
+		gamemode = null;
+		if ((gm != null) && (!gm.isEmpty())) {
+			gamemode = Gamemode.getGamemode(gm);
+		}
+
+		if (gamemode == null) {
+			ZArena.log(Level.WARNING, "Gamemode for level " +name+ " is invalid! The default gamemode has been assigned!");
+			gamemode = ZArena.getInstance().getGameHandler().defaultGamemode;
+		}
+	}
+	
 	@Override
 	public Map<String, Object> serialize()
 	{
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("Name", name);
 		map.put("World", world);
+		map.put("Gamemode", gamemode.getName());
 		map.put("Initial Spawn", iSpawn);
 		map.put("Death Spawn", dSpawn);
 
@@ -314,7 +334,6 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		return map;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static ZLevel deserialize(Map<String, Object> map)
 	{
 		ZLevel level = new ZLevel();
@@ -322,7 +341,8 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		level.world = (String) map.get("World");
 		level.iSpawn = (LocationSer) map.get("Initial Spawn");
 		level.dSpawn = (LocationSer) map.get("Death Spawn");
-
+		level.setGamemode((String) map.get("Gamemode"));
+		
 		MemorySection zSpawnSection = (MemorySection) map.get("ZSpawns");
 		for(String name : zSpawnSection.getKeys(false))
 		{
@@ -367,6 +387,7 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		if(ver == 0)
 		{
 			name = in.readUTF();
+			setGamemode(in.readUTF());
 			zSpawnLocations = (List<LocationSer>) in.readObject();
 			zSpawns = (Map<String, LocationSer>) in.readObject();
 			bossSpawns = new ArrayList<String>();
@@ -377,6 +398,7 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		else if(ver == 1)
 		{
 			name = in.readUTF();
+			setGamemode(in.readUTF());
 			zSpawnLocations = (List<LocationSer>) in.readObject();
 			zSpawns = (Map<String, LocationSer>) in.readObject();
 			bossSpawns = new ArrayList<String>();
@@ -387,6 +409,7 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		else if(ver == 2)
 		{
 			name = in.readUTF();
+			setGamemode(in.readUTF());
 			zSpawnLocations = (List<LocationSer>) in.readObject();
 			zSpawns = (Map<String, LocationSer>) in.readObject();
 			bossSpawns = (List<String>) in.readObject();
@@ -409,6 +432,7 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 		out.writeInt(VERSION);
 		
 		out.writeUTF(name);
+		out.writeUTF(gamemode.getName());
 		out.writeObject(zSpawnLocations);
 		out.writeObject(zSpawns);
 		out.writeObject(bossSpawns);
