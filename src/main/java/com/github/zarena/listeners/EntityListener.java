@@ -67,6 +67,7 @@ public class EntityListener implements Listener
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onEntityDeath(EntityDeathEvent event)
 	{
+		event.getDrops().clear();
 		Entity ent = event.getEntity();
 		if(ent instanceof Player)
 		{
@@ -142,13 +143,6 @@ public class EntityListener implements Listener
 				}
 			}
 		}
-	}
-
-	@EventHandler
-	public void clearDrops(EntityDeathEvent event)
-	{
-		if(CustomEntityWrapper.instanceOf(event.getEntity()))
-			event.getDrops().clear();
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
