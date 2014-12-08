@@ -7,7 +7,6 @@ import java.io.ObjectOutput;
 import java.util.*;
 import java.util.logging.Level;
 
-
 import net.minecraft.server.v1_7_R4.BlockDoor;
 import net.minecraft.server.v1_7_R4.BlockTrapdoor;
 import net.minecraft.server.v1_7_R4.EntityPlayer;
@@ -15,7 +14,6 @@ import net.minecraft.server.v1_7_R4.EntityPlayer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
 import org.bukkit.craftbukkit.v1_7_R4.entity.CraftPlayer;
@@ -32,7 +30,7 @@ public class ZTollSign extends ZSign implements Externalizable
 	private static final long serialVersionUID = "ZTOLLSIGN".hashCode(); // DO NOT CHANGE
 	private static final int VERSION = 4;
 
-	private LocationSer costBlockLocation; //The location of the block that costs money to be used
+	private List<LocationSer> costBlockLocations; //The location(s) of the block that costs money to be used
 	private boolean useableOnce;	//Whether or not this sign can only be used once
 	private boolean opposite; 	//The sign's costblock starts out open/on, as opposed to closed/off
 	private boolean noReset; 	//The sign's costblock doesn't reset, staying the same across multiple games
@@ -47,13 +45,13 @@ public class ZTollSign extends ZSign implements Externalizable
 	 */
 	public ZTollSign()
 	{
-		resetCostBlock();
+		resetCostBlocks();
 	}
 
-	public ZTollSign(ZLevel level, Location location, LocationSer costBlockLocation, int price, String name, String[] flags)
+	public ZTollSign(ZLevel level, Location location, List<LocationSer> costBlockLocations, int price, String name, String[] flags)
 	{
 		super(level, LocationSer.convertFromBukkitLocation(location), price);
-		this.costBlockLocation = costBlockLocation;
+		this.costBlockLocations = costBlockLocations;
 		this.name = name;
 		active = false;
 		for(String flag : flags)
@@ -80,6 +78,9 @@ public class ZTollSign extends ZSign implements Externalizable
 
 	public static ZTollSign attemptCreateSign(ZLevel level, Location location, String[] lines)
 	{
+		if((lines[3] == null) || (lines[3].isEmpty()))
+			return null;
+
 		int price;
 		try
 		{
@@ -88,17 +89,16 @@ public class ZTollSign extends ZSign implements Externalizable
 		{
 			return null;
 		}
-		LocationSer costBlockLocation = getTollableBlock(ZSign.getBlockOn(location).getLocation());
-		if(costBlockLocation == null)
-			costBlockLocation = getTollableBlock(location);
-		if(costBlockLocation == null)
+		ZArena.log(Level.INFO, "Adding new TollSign: " + lines[3] + "...");
+		List<LocationSer> locs = getTollableBlock(ZSign.getBlockOn(location).getLocation());
+		if(locs == null || locs.isEmpty()) {
+			ZArena.log(Level.WARNING, "TollSign has no togglable blocks! " + location);
 			return null;
+		}
 
 		String[] flags = lines[2].split("\\s");
 
-		if(lines[3] == null)
-			return null;
-		return new ZTollSign(level, location, costBlockLocation, price, lines[3], flags);
+		return new ZTollSign(level, location, locs, price, lines[3], flags);
 	}
 
 	private boolean canBeUsed()
@@ -111,11 +111,18 @@ public class ZTollSign extends ZSign implements Externalizable
 		return usable;
 	}
 
-	public Block getCostBlock()
+	public boolean isCostBlock(Location loc)
 	{
-		if(costBlockLocation != null)
-			return LocationSer.convertToBukkitLocation(costBlockLocation).getBlock();
-		return null;
+		Block b1 = loc.getBlock();
+		Block b2 = null;
+		if((costBlockLocations != null) && (!costBlockLocations.isEmpty())) {
+			for (LocationSer cbl : costBlockLocations) {
+				b2 = LocationSer.convertToBukkitLocation(cbl).getBlock();
+				if (b1.equals(b2))
+					return true;
+			}
+		}
+		return false;
 	}
 
 	public String getName()
@@ -123,32 +130,63 @@ public class ZTollSign extends ZSign implements Externalizable
 		return name;
 	}
 
-	private static LocationSer getTollableBlock(Location pos)
+	private static List<LocationSer> getTollableBlock(Location pos)
 	{
-		BlockFace[] verticalFaces = new BlockFace[] {BlockFace.UP, BlockFace.SELF, BlockFace.DOWN};
-		BlockFace[] horizontalFaces = new BlockFace[] {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST, BlockFace.SELF};
+		List<LocationSer> locs = new ArrayList<LocationSer>();
+		double radius = 3.0;
+		
+		Block block = null;
+		Location loc = new Location(pos.getWorld(), pos.getX(), pos.getY(), pos.getZ());
+		Location loc1 = new Location(pos.getWorld(), pos.getX()-radius, pos.getY()-radius, pos.getZ()-radius);
+		Location loc2 = new Location(pos.getWorld(), pos.getX()+radius, pos.getY()+radius, pos.getZ()+radius);
 
-		for (BlockFace bf : verticalFaces)
-		{
-			Block current = pos.getBlock().getRelative(bf);
-			for (BlockFace bf2 : horizontalFaces)
-			{
-				if (current.getRelative(bf2).getType() == Material.LEVER
-						|| current.getRelative(bf2).getType() == Material.WOODEN_DOOR || current.getRelative(bf2).getType() == Material.TRAP_DOOR
-						|| current.getRelative(bf2).getType() == Material.WOOD_BUTTON || current.getRelative(bf2).getType() == Material.STONE_BUTTON
-						|| current.getRelative(bf2).getType() == Material.IRON_DOOR_BLOCK)
-				{
-					return LocationSer.convertFromBukkitLocation(current.getRelative(bf2).getLocation());
-				}
-			}
-		}
-		return null;
+		boolean addblock = false;
+		for(double x = loc1.getX(); x <= loc2.getX(); x++) {
+			loc.setX(x);
+            for(double y = loc1.getY(); y <= loc2.getY(); y++) {
+            	loc.setY(y);
+            	for(double z = loc1.getZ(); z <= loc2.getZ(); z++) {
+            		loc.setZ(z);
+                    block = loc.getBlock();
+            		addblock = false;
+
+            		if (block.getType() == Material.LEVER
+    						|| block.getType() == Material.TRAP_DOOR
+    						|| block.getType() == Material.WOOD_BUTTON
+    						|| block.getType() == Material.STONE_BUTTON)
+    					addblock = true;
+    				else if (block.getType() == Material.WOODEN_DOOR || block.getType() == Material.IRON_DOOR_BLOCK) {
+    					// We only want to add each door once (only top or bottom block, not both)
+    					addblock = true;
+    				}
+
+    				if (addblock) {
+	    				ZArena.log(Level.INFO, "Adding " + block.getType() + " ("
+	    						+ block.getLocation().getBlockX() + ", " 
+	    						+ block.getLocation().getBlockY() + ", "
+	    						+ block.getLocation().getBlockZ() + ")");
+	    					locs.add(LocationSer.convertFromBukkitLocation(loc));
+    				}
+                }
+            }
+        }
+		return locs;
 	}
 
 	@Override
 	public boolean executeClick(Player player)
 	{
-		Block costBlock = getCostBlock();
+		for (LocationSer cbl : costBlockLocations) {
+			Block b = LocationSer.convertToBukkitLocation(cbl).getBlock();
+			if (!toggleCostBlock(player, b)) {
+				return false;
+			}
+		}
+		active = !active;	// Toggle state
+		return true;
+	}
+
+	private boolean toggleCostBlock(Player player, Block costBlock) {
 		net.minecraft.server.v1_7_R4.World nmsWorld = ((CraftWorld) costBlock.getWorld()).getHandle();
 		net.minecraft.server.v1_7_R4.Block nmsBlock = nmsWorld.getType(costBlock.getX(), costBlock.getY(), costBlock.getZ());
 		EntityPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
@@ -156,52 +194,31 @@ public class ZTollSign extends ZSign implements Externalizable
 		{
 		case WOODEN_DOOR: case IRON_DOOR: case IRON_DOOR_BLOCK:
 			if(!active && canBeUsed())
-			{
 				((BlockDoor) nmsBlock).setDoor(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), true);
-				active = true;
-			}
 			else if(active && canBeUsed())
-			{
 				((BlockDoor) nmsBlock).setDoor(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), false);
-				active = false;
-			}
 			else
 				return false;
 			return true;
 		case TRAP_DOOR:
 			if(!active && canBeUsed())
-			{
 				((BlockTrapdoor) nmsBlock).setOpen(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), true);
-				active = true;
-			}
 			else if(active && canBeUsed())
-			{
 				((BlockTrapdoor) nmsBlock).setOpen(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), false);
-				active = false;
-			}
 			else
 				return false;
 			return true;
 		case LEVER:
 			if(!active && canBeUsed())
-			{
 				nmsBlock.interact(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), nmsPlayer, 0, 0f, 0f, 0f);
-				active = true;
-			}
 			else if(active && canBeUsed())
-			{
 				nmsBlock.interact(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), nmsPlayer, 0, 0f, 0f, 0f);
-				active = false;
-			}
 			else
 				return false;
 			return true;
 		case STONE_BUTTON: case WOOD_BUTTON:
 			if(canBeUsed())
-			{
 				nmsBlock.interact(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), nmsPlayer, 0, 0f, 0f, 0f);
-				active = true;
-			}
 			else
 				return false;
 			return true;
@@ -209,7 +226,7 @@ public class ZTollSign extends ZSign implements Externalizable
 			return false;
 		}
 	}
-
+	
 	public boolean isActive()
 	{
 		return active;
@@ -232,18 +249,17 @@ public class ZTollSign extends ZSign implements Externalizable
 
 	public void reload()
 	{
+		ZArena.log(Level.INFO, "Checking TollSign: " + name + "...");
 		if(!(getLocation().getBlock().getState() instanceof Sign))
 		{
 			ZArena.log(Level.INFO, "The sign at "+location.toString()+" has been removed due to it's sign having been removed;");
 			getLevel().removeZSign(this);
 			return;
 		}
-		if(getCostBlock() == null)
+		if((costBlockLocations == null) || (costBlockLocations.isEmpty()))
 		{
-			costBlockLocation = getTollableBlock(ZSign.getBlockOn(getSign().getLocation()).getLocation());
-			if(getCostBlock() == null)
-				costBlockLocation = getTollableBlock(getLocation());
-			if(getCostBlock() == null)
+			costBlockLocations = getTollableBlock(ZSign.getBlockOn(getSign().getLocation()).getLocation());
+			if((costBlockLocations == null) || (costBlockLocations.isEmpty()))
 			{
 				ZArena.log(Level.INFO, "The sign at "+location.toString()+" has been removed due to the block it tolls having been removed.");
 				getLevel().removeZSign(this);
@@ -251,34 +267,43 @@ public class ZTollSign extends ZSign implements Externalizable
 		}
 	}
 
-	public void resetCostBlock()
+	public void resetCostBlocks()
 	{
+		if (costBlockLocations != null) {
+			for (LocationSer cbl : costBlockLocations) {
+				Block b = LocationSer.convertToBukkitLocation(cbl).getBlock();
+				if (b != null)
+					resetCostBlock(b);
+			}
+			active = opposite;
+			ZArena.log(Level.INFO, "Reset CostBlocks for TollSign: " + name);
+		}
+	}
+
+	private void resetCostBlock(Block costBlock) {
 		if(noReset)
 			return;
-		Block costBlock = getCostBlock();
+
 		if(costBlock == null)
 			return;
+
 		net.minecraft.server.v1_7_R4.World nmsWorld = ((CraftWorld) costBlock.getWorld()).getHandle();
 		net.minecraft.server.v1_7_R4.Block nmsBlock = nmsWorld.getType(costBlock.getX(), costBlock.getY(), costBlock.getZ());
 		switch(costBlock.getType())
 		{
 		case WOODEN_DOOR: case IRON_DOOR: case IRON_DOOR_BLOCK:
 			((BlockDoor) nmsBlock).setDoor(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), opposite);
-			active = opposite;
 			break;
 		case TRAP_DOOR:
 			((BlockTrapdoor) nmsBlock).setOpen(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), opposite);
-			active = opposite;
 			break;
 		case LEVER:
 			if(8 - (nmsWorld.getData(costBlock.getX(), costBlock.getY(), costBlock.getZ()) & 8) != 8 && !opposite)
 				nmsBlock.interact(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), null, 0, 0f, 0f, 0f);
 			else if(8 - (nmsWorld.getData(costBlock.getX(), costBlock.getY(), costBlock.getZ()) & 8) == 8 && opposite)
 				nmsBlock.interact(nmsWorld, costBlock.getX(), costBlock.getY(), costBlock.getZ(), null, 0, 0f, 0f, 0f);
-			active = opposite;
 			break;
 		case STONE_BUTTON: case WOOD_BUTTON:
-			active = opposite;
 			break;
 		default:
 		}
@@ -308,7 +333,7 @@ public class ZTollSign extends ZSign implements Externalizable
 
 		if(ver == 0)
 		{
-			costBlockLocation = (LocationSer) in.readObject();
+			costBlockLocations = new ArrayList<LocationSer>();
 			active = false;
 			name = generateString(new Random(), "abcdefghigsadjas", 10);
 			zSpawns = new ArrayList<String>();
@@ -316,7 +341,8 @@ public class ZTollSign extends ZSign implements Externalizable
 		}
 		else if(ver == 1)
 		{
-			costBlockLocation = (LocationSer) in.readObject();
+			//costBlockLocation = (LocationSer) in.readObject();
+			costBlockLocations = new ArrayList<LocationSer>();
 			active = in.readBoolean();
 			name = in.readUTF();
 			zSpawns = new ArrayList<String>();
@@ -324,7 +350,7 @@ public class ZTollSign extends ZSign implements Externalizable
 		}
 		else if(ver == 2)
 		{
-			costBlockLocation = (LocationSer) in.readObject();
+			costBlockLocations = new ArrayList<LocationSer>();
 			active = in.readBoolean();
 			name = in.readUTF();
 			oldZSpawns = (List<LocationSer>) in.readObject();
@@ -333,7 +359,7 @@ public class ZTollSign extends ZSign implements Externalizable
 		}
 		else if(ver == 3)
 		{
-			costBlockLocation = (LocationSer) in.readObject();
+			costBlockLocations = new ArrayList<LocationSer>();
 			active = in.readBoolean();
 			name = in.readUTF();
 			oldZSpawns = (List<LocationSer>) in.readObject();
@@ -342,7 +368,7 @@ public class ZTollSign extends ZSign implements Externalizable
 		}
 		else if(ver == 4)
 		{
-			costBlockLocation = (LocationSer) in.readObject();
+			costBlockLocations = new ArrayList<LocationSer>();
 			active = in.readBoolean();
 			name = in.readUTF();
 			zSpawns = (List<String>) in.readObject();
@@ -361,7 +387,7 @@ public class ZTollSign extends ZSign implements Externalizable
 		super.writeExternal(out);
 		out.writeInt(VERSION);
 
-		out.writeObject(costBlockLocation);
+		out.writeObject(costBlockLocations);
 		out.writeBoolean(active);
 		out.writeUTF(name);
 		out.writeObject(zSpawns);
@@ -383,7 +409,7 @@ public class ZTollSign extends ZSign implements Externalizable
 	{
 		Map<String, Object> map = super.serialize();
 		map.put("Name", name);
-		map.put("Tolled Block Location", costBlockLocation);
+		map.put("Tolled Block Locations", costBlockLocations);
 		map.put("Useable Once", useableOnce);
 		map.put("Opposite", opposite);
 		map.put("No Reset", noReset);
@@ -412,7 +438,7 @@ public class ZTollSign extends ZSign implements Externalizable
 		tollSign.price = (Integer) map.get("Price");
 
 		tollSign.name = (String) map.get("Name");
-		tollSign.costBlockLocation = (LocationSer) map.get("Tolled Block Location");
+		tollSign.costBlockLocations = (List<LocationSer>) map.get("Tolled Block Locations");
 		tollSign.useableOnce = (Boolean) map.get("Useable Once");
 		tollSign.opposite = (Boolean) map.get("Opposite");
 		tollSign.noReset = (Boolean) map.get("No Reset");

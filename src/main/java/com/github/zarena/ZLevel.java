@@ -256,7 +256,7 @@ public class ZLevel implements Externalizable, ConfigurationSerializable
 			if(sign instanceof ZTollSign)
 			{
 				ZTollSign tollSign = (ZTollSign) sign;
-				tollSign.resetCostBlock();
+				tollSign.resetCostBlocks();
 			}
 		}
 	}

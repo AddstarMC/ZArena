@@ -5,7 +5,6 @@ import org.bukkit.GameMode;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -142,7 +141,7 @@ public class PlayerListener implements Listener
 				for(ZSign sign : level.getZSigns())
 				{
 					if(sign instanceof ZTollSign)
-						if(((ZTollSign) sign).getCostBlock().equals(block))
+						if(((ZTollSign) sign).isCostBlock(block.getLocation()))
 						{
 							event.setCancelled(true);	//Cancel the event, as the block changes are handled by the sign
 							if(sign.onClick(player))
