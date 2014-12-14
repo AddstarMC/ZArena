@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.Random;
 
 import com.github.zarena.utils.ConfigEnum;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -86,6 +87,7 @@ public class LevelVoter implements Runnable
 	 */
 	public void start()
 	{
+		new Throwable().printStackTrace();
 		gameHandler.isVoting = true;
 		int maps = gameHandler.getLevelHandler().getLevels().size();
 		if(maps == 0)

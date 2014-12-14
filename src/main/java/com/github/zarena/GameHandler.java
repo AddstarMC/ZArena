@@ -2,15 +2,13 @@ package com.github.zarena;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+
 
 
 
@@ -35,7 +33,6 @@ import org.bukkit.potion.PotionEffect;
 
 import com.github.zarena.commands.CommandSenderWrapper;
 import com.github.zarena.signs.ZSignCustomItem;
-import com.google.common.io.Files;
 
 public class GameHandler
 {
@@ -73,16 +70,32 @@ public class GameHandler
 	 * Adds a player to the game.
 	 * @param player the player to add
 	 */
-	public void addPlayer(Player player)
+	public void addPlayer(Player player, String wantlevel)
 	{
+		ZArena.log(Level.INFO, "Attempting to add player " + player.getName() + " to " + wantlevel);
+		if (level != null && (isRunning || isWaiting || isVoting) && (!wantlevel.equalsIgnoreCase(level.getName()))) {
+			ChatHelper.sendMessage(Message.WRONG_GAME_JOIN.formatMessage(wantlevel), player);
+			return;
+		}
 		if(players.size() >= plugin.getConfig().getInt(ConfigEnum.PLAYER_LIMIT.toString()))
 		{
 			ChatHelper.sendMessage(Message.GAME_FULL.formatMessage(), player);
 			return;
 		}
-		if(players.contains(player.getName()))
+		if(players.contains(player.getName())) {
+			ZArena.log(Level.INFO, "Player already added...");
 			return;
+		}
 
+		ZLevel zl = getLevelHandler().getLevel(wantlevel);
+		if (zl != null) {
+			if (plugin.getConfig().getInt(ConfigEnum.VOTING_LENGTH.toString()) == 0) {
+				setLevel(zl);
+			}
+		} else {
+			ChatHelper.sendMessage(Message.LEVEL_NOT_FOUND.formatMessage(wantlevel), player);
+			return;
+		}
 		players.add(player.getName());
 		PlayerStats stats = new PlayerStats(player);
 		playerStats.put(player.getName(), stats);
@@ -97,6 +110,7 @@ public class GameHandler
 		int wave = waveHandler.getWave();
 		if(isRunning)
 		{
+			ZArena.log(Level.INFO, "Level " + level + ": Game in progress, adding player");
 			if(wave == 1 && !(gamemode.isApocalypse()))
 			{
 				PlayerRespawnInGameEvent event = new PlayerRespawnInGameEvent(stats.getPlayer(), getStartItems(), PlayerRespawnCause.GAME_START);
@@ -134,6 +148,7 @@ public class GameHandler
 		}
 		else if(isVoting)
 		{
+			ZArena.log(Level.INFO, "Level " + level + ": Voting in progress");
 			if(level != null)
 				player.teleport(level.getDeathSpawn());
 			else
@@ -144,10 +159,17 @@ public class GameHandler
 		}
 		else
 		{
-			if(level != null)
-				player.teleport(level.getDeathSpawn());
-			if(isWaiting)
+			ZArena.log(Level.INFO, "Level " + level + ": No game in progress, starting game!");
+			if (plugin.getConfig().getInt(ConfigEnum.VOTING_LENGTH.toString()) == 0) {
+				// First player to join when voting is disabled will auto start the game
 				start();
+			} else {
+				// When voting is in use, game will be started by voting
+				if(level != null)
+					player.teleport(level.getDeathSpawn());
+				if(isWaiting)
+					start();
+			}
 		}
 	}
 
@@ -540,6 +562,7 @@ public class GameHandler
 
 	public void setLevel(ZLevel level)
 	{
+		ZArena.log(Level.INFO, "Set level = " + level);
 		this.level = level;
 	}
 
@@ -548,6 +571,7 @@ public class GameHandler
 	 */
 	public void start()
 	{
+		ZArena.log(Level.INFO, "Starting game!");
 		if(isRunning || isVoting)
 			return;
 		if(players.isEmpty())
@@ -584,6 +608,7 @@ public class GameHandler
 	 */
 	public void stop()
 	{
+		ZArena.log(Level.INFO, "Stopping game!");
 		if(!isRunning && !isVoting)
 			return;
 		if(isRunning)

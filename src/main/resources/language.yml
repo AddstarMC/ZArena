@@ -241,7 +241,7 @@ ZSpawns List Header: "<red>ZSpawns:"
 ZSpawns List Item: "<dark_gray>%ZSPAWN%, "
 
 #Sent when the player uses a command that contains a level that could not be found.
-Level Not Found: "<red>Level could not be found."
+Level Not Found: "<red>Level %LEVEL% could not be found."
 
 #Sent when a level is successfully loaded.
 #LEVEL - The level's name.

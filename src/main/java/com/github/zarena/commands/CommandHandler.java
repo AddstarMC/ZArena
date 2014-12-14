@@ -77,7 +77,7 @@ public class CommandHandler
 		senderWrapper.sendMessage(Message.CURRENT_GAMEMODE.formatMessage(gm.toString()));
 	}
 
-	public void joinGame()
+	public void joinGame(String levelname)
 	{
 		if(!senderWrapper.canEnterLeaveGames())
 		{
@@ -99,7 +99,7 @@ public class CommandHandler
 				return;
 			}
 		}
-		gameHandler.addPlayer(player);
+		gameHandler.addPlayer(player, levelname);
 	}
 
 	public void jumpToDSpawn()

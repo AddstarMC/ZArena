@@ -28,7 +28,7 @@ public class ZACommands implements CommandExecutor
 			switch(StringEnums.valueOf(command.get(1).toUpperCase()))
 			{
 			case ENTER: case JOIN:
-				handler.joinGame();
+				handler.joinGame(command.get(2));
 				break;
 			case LEAVE:
 				handler.leaveGame();

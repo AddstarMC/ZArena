@@ -3,6 +3,7 @@ package com.github.zarena.listeners;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 import java.util.Random;
 
 import com.github.customentitylibrary.entities.CustomEntityWrapper;
@@ -78,6 +79,7 @@ public class EntityListener implements Listener
 			{
 				if(stats.isAlive())
 				{
+            		ZArena.log(Level.INFO, "Player " + player.getName() + " has died in the game");
 					stats.setAlive(false);
 					stats.subMoney(stats.getMoney() * plugin.getConfig().getDouble(ConfigEnum.MONEY_LOST.toString()));
 					stats.registerDeath();
@@ -86,6 +88,11 @@ public class EntityListener implements Listener
                     {
                         ChatHelper.broadcastMessage(Message.ON_PLAYER_DEATH_GLOBAL.formatMessage(player.getName(),
                                 gameHandler.getAliveCount()), gameHandler.getBroadcastPlayers());
+                    } else {
+                    	// Remove the last player
+                		ZArena.log(Level.INFO, "No other players are alive, stopping game.");
+                    	gameHandler.removePlayer(player);
+                    	gameHandler.stop();
                     }
 				}
 			}

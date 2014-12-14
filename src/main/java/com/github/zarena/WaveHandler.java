@@ -596,7 +596,8 @@ public class WaveHandler implements Runnable, Listener
 				gameHandler.stop();
 				GameStopEvent event = new GameStopEvent(GameStopCause.ALL_DEAD);
 				Bukkit.getServer().getPluginManager().callEvent(event);
-				if(plugin.getConfig().getBoolean(ConfigEnum.AUTORUN.toString()))
+				if(plugin.getConfig().getBoolean(ConfigEnum.AUTORUN.toString())
+						&& plugin.getConfig().getInt(ConfigEnum.VOTING_LENGTH.toString()) > 0)
 					gameHandler.getLevelVoter().start();
 			}
 
